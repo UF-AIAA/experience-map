@@ -166,17 +166,24 @@ const typeLabel = p => p.type || "Internship";
 
 // ---- map ----
 const map = L.map("map",{worldCopyJump:true, scrollWheelZoom:true, minZoom:2, maxZoom:14}).setView([38,-96],4);
-if (window.PREVIEW_BASEMAP){
-  // Hosted previews that can't load tiles get a flat vector basemap instead (US states + world land).
+
+// Basemap: CARTO street tiles when a key is configured, otherwise the built-in flat vector map
+// (US states + world land, assets/basemap.json) which needs no outside service at all.
+function vectorBasemap(geojson){
   document.getElementById("map").style.background = "#D7E1EC";
-  L.geoJSON(window.PREVIEW_BASEMAP, {style: f => f.properties.k === "s"
+  L.geoJSON(geojson, {style: f => f.properties.k === "s"
     ? {fillColor:"#F6F7FA", fillOpacity:1, color:"#B9C3D3", weight:.8}
     : {fillColor:"#E9ECF2", fillOpacity:1, color:"#C9D0DC", weight:.6}}).addTo(map);
   map.attributionControl.addAttribution("Boundaries: U.S. Census Bureau, Natural Earth");
-} else {
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{
-    maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+}
+if (window.CARTO_BASEMAP_KEY){
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(window.CARTO_BASEMAP_KEY)}`,{
+    maxZoom:19, subdomains:"abcd", attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
   }).addTo(map);
+} else if (window.PREVIEW_BASEMAP){
+  vectorBasemap(window.PREVIEW_BASEMAP);
+} else {
+  fetch("assets/basemap.json").then(r=>r.json()).then(vectorBasemap).catch(()=>{});
 }
 const cluster = L.markerClusterGroup({maxClusterRadius:40, spiderfyOnMaxZoom:true, showCoverageOnHover:false});
 map.addLayer(cluster);
