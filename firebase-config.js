@@ -21,4 +21,4 @@ window.FIREBASE_CONFIG = {
 // Version of the Firebase web SDK loaded from Google's CDN.
 window.FIREBASE_SDK_VERSION = "12.19.0";
 
-window.CARTO_BASEMAP_KEY = cb1_425z_1_985b77577afd71c4771a9a66;
+window.CARTO_BASEMAP_KEY = "cb1_425z_1_985b77577afd71c4771a9a66";
