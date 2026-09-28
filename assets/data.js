@@ -47,12 +47,20 @@
     return fb;
   }
 
+  // Years arrive from spreadsheets/KML as "2025.0" or 2025.0 — keep just the 4 digits.
+  function year(v){
+    if (v === undefined || v === null) return "";
+    const s = String(v).trim();
+    const m = /^(\d{4})(?:\.0+)?$/.exec(s);
+    return m ? m[1] : s;
+  }
   function clean(obj){
     const out = {};
     for (const k of FIELDS){
       let v = obj[k];
       if (v === undefined || v === null) continue;
       if (k==="lat"||k==="lon"){ v = parseFloat(v); if(!Number.isFinite(v)) continue; }
+      else if (k==="gradYear"||k==="oppYear"){ v = year(v); if(!v) continue; }
       else { v = String(v).trim(); if(!v) continue; }
       out[k] = v;
     }
@@ -87,7 +95,7 @@
 
   // ================= PUBLIC API =================
   window.AIAA = {
-    DEMO, FIELDS, normType, geocode,
+    DEMO, FIELDS, normType, geocode, year,
 
     async loadAlumni(){
       if (DEMO) return demoState.alumni.map(a=>({...a}));
