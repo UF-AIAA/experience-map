@@ -10,12 +10,12 @@
 // can preview the design before Firebase is set up.
 
 window.FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: "",
+  apiKey: "AIzaSyDnaElNWqOxNidCsZHUX3yKOmJCsDFTkJU",
+  authDomain: "uf-aiaa-experience-ap.firebaseapp.com",
+  projectId: "uf-aiaa-experience-ap",
+  storageBucket: "uf-aiaa-experience-ap.firebasestorage.app",
+  messagingSenderId: "371899965943",
+  appId: "1:371899965943:web:dfd4ae399b705ae1200ef2",
 };
 
 // Version of the Firebase web SDK loaded from Google's CDN.
