@@ -3,319 +3,518 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>UF AIAA Experience Map</title>
-<meta name="description" content="Where University of Florida AIAA members have interned and worked across the aerospace industry — and how to reach them.">
+<title>Officer admin · UF AIAA Experience Map</title>
+<meta name="robots" content="noindex">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
 <link rel="stylesheet" href="assets/site.css">
 <style>
-  .intro{background:var(--mist);border-bottom:1px solid var(--line)}
-  .intro-inner{max-width:1400px;margin:0 auto;padding:28px 24px 22px}
-  .intro h1{font-size:34px;color:var(--navy);max-width:22ch}
-  .intro p{max-width:64ch;color:var(--muted);font-size:16px;margin:10px 0 18px}
-  .intro p strong{color:var(--ink);font-weight:600}
-  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .search{position:relative;flex:1 1 260px;max-width:480px}
-  .search input{padding-left:36px}
-  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
-  .group-toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
-  .group-toggle button{border:0;background:none;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
-  .group-toggle button[aria-pressed="true"]{background:var(--navy);color:#fff}
-  .count{font-size:13px;color:var(--muted);margin-left:auto}
+  body{background:var(--mist);min-height:100vh;display:flex;flex-direction:column}
+  main{flex:1}
+  .wrap{max-width:1200px;margin:0 auto;padding:28px 24px}
+  .topbar .who{margin-left:auto;display:flex;align-items:center;gap:12px;font-size:13.5px}
+  .topbar .who .btn{background:rgba(255,255,255,.14)}
+  .topbar .who .btn:hover{background:rgba(255,255,255,.24)}
 
-  .explorer{max-width:1400px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:380px 1fr;height:clamp(520px,72vh,860px);border-bottom:1px solid var(--line)}
-  aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff}
-  #map{height:100%;width:100%;background:#E9EDF4}
-  .grp{border-bottom:1px solid var(--line)}
-  .grp-head{position:sticky;top:0;z-index:1;background:#fff;padding:10px 16px 6px;font-size:12.5px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between}
-  .person{display:grid;grid-template-columns:12px 1fr;gap:12px;align-items:start;width:100%;text-align:left;padding:10px 16px;border:0;background:none;cursor:pointer;color:inherit}
-  .person:hover{background:var(--mist)}
-  .person:focus-visible{outline-offset:-3px}
-  .person[aria-current="true"]{background:#EEF2FF}
-  .person .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
-  .dot.i{background:var(--uf-orange)} .dot.f{background:var(--uf-blue)}
-  .person .name{font-weight:600;font-size:14.5px}
-  .person .role{font-size:13px;color:var(--muted);margin-top:1px;line-height:1.35}
-  .person .where{font-size:12px;color:var(--muted);margin-top:3px}
-  .empty{padding:20px 16px;font-size:14px;color:var(--muted);line-height:1.5}
-  .side-notice{margin:12px 16px 0}
+  /* login */
+  .login{max-width:420px;margin:56px auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:30px;box-shadow:var(--shadow)}
+  .login h1{font-size:26px;color:var(--navy);margin-bottom:6px}
+  .login p{color:var(--muted);font-size:14px}
+  .login form{display:grid;gap:14px;margin-top:18px}
+  .login .links{display:flex;justify-content:space-between;gap:16px;font-size:13px;margin-top:4px;text-align:left}
+  .login .links .btn.link{text-align:left}
 
-  .add{max-width:1400px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px}
-  .add h2{font-size:28px;color:var(--navy)}
-  .add .lead{color:var(--muted);font-size:15.5px;margin-top:10px;max-width:40ch}
-  .add .lead + .lead{margin-top:8px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(14,27,61,.05)}
-  .card .actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
-  .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+  /* dashboard */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 20px;flex-wrap:wrap}
+  .tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button[aria-selected="true"]{color:var(--uf-blue);border-bottom-color:var(--uf-orange)}
+  .tabs .badge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:999px;background:var(--uf-orange);color:#fff;font-size:11.5px;text-align:center;margin-left:6px}
+  .tabs .badge:empty{display:none}
+  .panel{display:none} .panel[data-active="true"]{display:block}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px}
+  .card + .card{margin-top:16px}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .toolbar .input{max-width:360px}
+  .toolbar .spacer{flex:1}
+  .table-wrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .muted{color:var(--muted)} .small{font-size:12.5px}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+  .tag.i{background:#FFE9E1;color:#9A2E0A} .tag.f{background:#E6EAFB;color:#0B1E7A}
+  .warn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--uf-orange);margin-right:6px;vertical-align:middle}
 
-  @media (max-width:900px){
-    .explorer{grid-template-columns:1fr;grid-template-rows:auto auto;height:auto;padding:0}
-    #map{order:1;height:440px}
-    aside{order:2;border-right:0;border-top:1px solid var(--line);max-height:62vh}
-    .add{grid-template-columns:1fr;gap:20px;padding-top:36px}
-    .intro-inner{padding:22px 16px 18px}
-    .intro h1{font-size:28px}
-    .add{padding-left:16px;padding-right:16px}
-    .footer-inner{padding:22px 16px}
-  }
-  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+  .sub{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start}
+  .sub dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0;font-size:14px}
+  .sub dt{color:var(--muted)} .sub dd{margin:0}
+  .sub .btns{display:flex;flex-direction:column;gap:8px;min-width:160px}
+  .sub .notes{grid-column:1/-1;background:#FFF8EF;border:1px solid #F7DDBE;border-radius:8px;padding:10px 12px;font-size:13.5px}
+
+  /* modal */
+  dialog{border:0;border-radius:14px;padding:0;max-width:720px;width:calc(100% - 32px);box-shadow:var(--shadow)}
+  dialog::backdrop{background:rgba(14,27,61,.45)}
+  dialog .body{padding:24px}
+  dialog h2{color:var(--navy);margin-bottom:16px}
+  dialog .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;align-items:center}
+  dialog .actions .spacer{flex:1}
+
+  .progress{height:8px;background:var(--mist);border-radius:99px;overflow:hidden;margin:10px 0}
+  .progress > div{height:100%;background:var(--uf-blue);width:0;transition:width .2s}
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--muted);font-size:14px;background:#FAFBFD}
+  .drop.over{border-color:var(--uf-blue);background:#EEF2FF}
+  ol.steps{padding-left:20px;margin:8px 0;font-size:14px;line-height:1.55}
+  #preview th,#preview td{font-size:12.5px;white-space:nowrap}
 </style>
 </head>
 <body>
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="#top">
+    <a class="brand" href="index.html">
       <img src="assets/logo.svg" alt="UF AIAA">
       <span class="brand-text">
         <span class="chapter">University of Florida · AIAA Student Chapter</span>
-        <span class="title">Experience Map</span>
+        <span class="title">Experience Map · Officer admin</span>
       </span>
     </a>
-    <nav class="topnav" aria-label="Site">
-      <a href="#explore">Map</a>
-      <a href="#add" class="primary"><span class="long">Add your experience</span><span class="short">Add yours</span></a>
-    </nav>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <a class="btn small" href="index.html">View public map</a>
+      <button class="btn small" id="signout">Sign out</button>
+    </div>
   </div>
 </header>
 
-<section class="intro" id="top">
-  <div class="intro-inner">
-    <h1>Where Gators have gone to work.</h1>
-    <p id="lede">Loading the map…</p>
-    <div class="controls">
-      <div class="search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" class="input" type="search" placeholder="Search a company, city, state, name, or role" aria-label="Search alumni">
+<main>
+  <!-- ============ LOGIN ============ -->
+  <section class="login" id="login" hidden>
+    <h1>Officer sign-in</h1>
+    <p id="login-lede">Sign in to review submissions and edit the map.</p>
+    <form id="login-form">
+      <div class="field"><label for="l-email">Email</label><input class="input" id="l-email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="l-pass">Password</label><input class="input" id="l-pass" type="password" autocomplete="current-password" required minlength="6"></div>
+      <div id="login-msg" aria-live="polite"></div>
+      <button class="btn" type="submit" id="login-btn">Sign in</button>
+      <div class="links">
+        <button class="btn link" type="button" id="toggle-mode">First time here? Create your account</button>
+        <button class="btn link" type="button" id="forgot">Forgot password</button>
       </div>
-      <button class="chip" data-type="Internship" aria-pressed="true"><span class="dot"></span>Internships &amp; co-ops</button>
-      <button class="chip" data-type="Full-time" aria-pressed="true"><span class="dot"></span>Full-time</button>
-      <div class="group-toggle" role="group" aria-label="Group list by">
-        <button data-group="company" aria-pressed="true">By company</button>
-        <button data-group="state" aria-pressed="false">By state</button>
-      </div>
-      <span class="count" id="count"></span>
+    </form>
+  </section>
+
+  <!-- ============ NOT AN OFFICER ============ -->
+  <section class="login" id="not-admin" hidden>
+    <h1>Almost there</h1>
+    <p>Your account is signed in, but <strong id="na-email"></strong> isn't on the officer list yet, so it can't edit the map. Ask a current officer to add your email under <em>Officers</em>, then reload this page.</p>
+    <p style="margin-top:14px"><button class="btn ghost" id="na-signout">Sign out</button></p>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="wrap" id="dash" hidden>
+    <div id="demo-banner" class="notice info" style="margin-bottom:18px" hidden>Demo mode: changes here live only in this browser tab. Connect Firebase (see README) to make them real.</div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="pending" aria-selected="true">Pending <span class="badge" id="pending-badge"></span></button>
+      <button role="tab" data-tab="alumni" aria-selected="false">Alumni</button>
+      <button role="tab" data-tab="import" aria-selected="false">Import &amp; export</button>
+      <button role="tab" data-tab="officers" aria-selected="false">Officers</button>
     </div>
-  </div>
-</section>
 
-<section class="explorer" id="explore">
-  <aside id="list" aria-label="Alumni directory"></aside>
-  <div id="map" role="application" aria-label="Map of where alumni have worked"></div>
-</section>
+    <!-- Pending -->
+    <div class="panel" data-tab="pending" data-active="true">
+      <div id="pending-list"></div>
+    </div>
 
-<section class="add" id="add">
-  <div>
-    <h2>Add your experience</h2>
-    <p class="lead">Interned somewhere, took a full-time offer, or moved companies? Put it on the map so the next Gator applying there has someone to ask.</p>
-    <p class="lead">An officer reviews each entry before it goes live, usually within a few days. Contact info is optional; a LinkedIn link is enough for most people.</p>
-  </div>
-  <form class="card" id="submit-form" novalidate>
+    <!-- Alumni -->
+    <div class="panel" data-tab="alumni">
+      <div class="toolbar">
+        <input class="input" id="a-search" type="search" placeholder="Filter by name, company, city…" aria-label="Filter alumni">
+        <span class="muted small" id="a-count"></span>
+        <span class="spacer"></span>
+        <button class="btn ghost small" id="locate-missing" hidden>Locate unpinned entries</button>
+        <button class="btn" id="add-alum">Add entry</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table" id="a-table">
+          <thead><tr><th>Name</th><th>Position</th><th>Type</th><th>Company</th><th>Location</th><th>Class of</th><th>Year</th><th>Contact</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Import & export -->
+    <div class="panel" data-tab="import">
+      <div class="card">
+        <h2>Import from Google My Maps or a spreadsheet</h2>
+        <p class="muted" style="margin-top:6px">Accepts a CSV or a KML file. Columns are matched by header name, so the current My Maps columns (<code>Position</code>, <code>Name (First and Last)</code>, <code>Internship or Full-time?</code>, <code>Company</code>, <code>City</code>, <code>State</code>, <code>Graduation Year</code>, <code>Year of Opportunity</code>) work as-is. Optional columns: <code>Email</code>, <code>LinkedIn</code>, <code>Lat</code>, <code>Lon</code>.</p>
+        <details style="margin:10px 0 16px;font-size:14px"><summary style="cursor:pointer;font-weight:600">How to export the existing map</summary>
+          <ol class="steps">
+            <li>Open the map in Google My Maps while signed in as an editor.</li>
+            <li>Click the three dots next to the map title and choose <strong>Export to KML/KMZ</strong>. Pick the alumni layer, tick <strong>Export as KML instead of KMZ</strong>, and download.</li>
+            <li>Drop that <code>.kml</code> file below. Pins keep their exact coordinates, so no geocoding is needed.</li>
+            <li>Alternatively, open the layer's data table, copy everything into a Google Sheet, download it as CSV, and drop that here instead (cities get geocoded, about one per second).</li>
+          </ol>
+        </details>
+        <div class="drop" id="drop">Drop a .csv or .kml here, or <label style="color:var(--uf-blue);text-decoration:underline;cursor:pointer">choose a file<input type="file" id="file" accept=".csv,.kml,.txt,text/csv,application/vnd.google-earth.kml+xml" hidden></label>. You can also paste CSV text below.</div>
+        <textarea class="textarea" id="paste" placeholder="…or paste CSV here (first row = headers)" style="margin-top:12px"></textarea>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="btn ghost" id="parse">Preview</button>
+          <label class="small" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="replace-all"> Replace all existing entries (instead of adding)</label>
+          <span class="spacer"></span>
+          <button class="btn" id="import-btn" disabled>Import</button>
+        </div>
+        <div id="import-msg" aria-live="polite"></div>
+        <div class="progress" id="progress" hidden><div></div></div>
+        <div class="table-wrap" id="preview-wrap" hidden style="max-height:320px;margin-top:12px"><table class="table" id="preview"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>Export</h2>
+        <p class="muted" style="margin:6px 0 12px">Download everything currently on the map as a CSV — for a backup, for the chapter drive, or to hand off to next year's chair.</p>
+        <button class="btn ghost" id="export-btn">Download CSV</button>
+      </div>
+    </div>
+
+    <!-- Officers -->
+    <div class="panel" data-tab="officers">
+      <div class="card">
+        <h2>Officers who can edit the map</h2>
+        <p class="muted" style="margin:6px 0 14px">Anyone listed here can sign in and make changes. To hand off: add the new chair's email, have them create an account on the sign-in page with that email, then remove yourself.</p>
+        <form class="toolbar" id="add-admin-form">
+          <input class="input" id="admin-email" type="email" placeholder="officer@ufl.edu" required>
+          <button class="btn" type="submit">Add officer</button>
+        </form>
+        <div id="admin-msg"></div>
+        <div class="table-wrap"><table class="table" id="admins-table"><thead><tr><th>Email</th><th></th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ============ EDIT MODAL ============ -->
+<dialog id="edit">
+  <form class="body" id="edit-form" method="dialog">
+    <h2 id="edit-title">Edit entry</h2>
     <div class="form-grid">
-      <div class="field"><label for="f-name">Name (first and last)</label><input class="input" id="f-name" name="name" required autocomplete="name"></div>
-      <div class="field"><label for="f-position">Position</label><input class="input" id="f-position" name="position" placeholder="e.g. Controls Engineering Intern" required></div>
-      <div class="field"><label for="f-type">Internship or full-time?</label>
-        <select class="select" id="f-type" name="type" required>
-          <option value="Internship">Internship</option>
-          <option value="Co-op">Co-op</option>
-          <option value="Full-time">Full-time</option>
-        </select></div>
-      <div class="field"><label for="f-company">Company</label><input class="input" id="f-company" name="company" required></div>
-      <div class="field"><label for="f-city">City</label><input class="input" id="f-city" name="city" required placeholder="e.g. Eglin Air Force Base"></div>
-      <div class="field"><label for="f-state">State</label><select class="select" id="f-state" name="state" required></select></div>
-      <div class="field"><label for="f-grad">Graduation year</label><input class="input" id="f-grad" name="gradYear" inputmode="numeric" pattern="[0-9]{4}" placeholder="2027" required></div>
-      <div class="field"><label for="f-opp">Year of the opportunity</label><input class="input" id="f-opp" name="oppYear" inputmode="numeric" pattern="[0-9]{4}" placeholder="2026" required></div>
-      <div class="field"><label for="f-email">Email <span class="hint">optional, shown publicly</span></label><input class="input" id="f-email" name="email" type="email" autocomplete="email"></div>
-      <div class="field"><label for="f-linkedin">LinkedIn URL <span class="hint">optional</span></label><input class="input" id="f-linkedin" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/…"></div>
-      <div class="field span-2"><label for="f-notes">Anything the officers should know <span class="hint">optional, only officers see this</span></label><textarea class="textarea" id="f-notes" name="notes" placeholder="e.g. I'm happy to do referrals for the summer program."></textarea></div>
-      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="field"><label>Name</label><input class="input" name="name" required></div>
+      <div class="field"><label>Position</label><input class="input" name="position" required></div>
+      <div class="field"><label>Type</label><select class="select" name="type"><option>Internship</option><option>Co-op</option><option>Full-time</option></select></div>
+      <div class="field"><label>Company</label><input class="input" name="company" required></div>
+      <div class="field"><label>City</label><input class="input" name="city" required></div>
+      <div class="field"><label>State</label><input class="input" name="state" required list="states"></div>
+      <div class="field"><label>Graduation year</label><input class="input" name="gradYear" inputmode="numeric"></div>
+      <div class="field"><label>Year of opportunity</label><input class="input" name="oppYear" inputmode="numeric"></div>
+      <div class="field"><label>Email <span class="hint">shown publicly</span></label><input class="input" name="email" type="email"></div>
+      <div class="field"><label>LinkedIn URL</label><input class="input" name="linkedin" type="url"></div>
+      <div class="field"><label>Latitude <span class="hint">blank = find from city</span></label><input class="input" name="lat" inputmode="decimal"></div>
+      <div class="field"><label>Longitude</label><input class="input" name="lon" inputmode="decimal"></div>
     </div>
+    <input type="hidden" name="id">
     <div class="actions">
-      <button class="btn orange" type="submit" id="submit-btn">Send for review</button>
-      <span id="form-msg" aria-live="polite"></span>
+      <span id="edit-msg" class="small muted"></span>
+      <span class="spacer"></span>
+      <button class="btn ghost" type="button" id="edit-cancel">Cancel</button>
+      <button class="btn" type="submit" id="edit-save">Save</button>
     </div>
   </form>
-</section>
+</dialog>
+<datalist id="states"></datalist>
 
-<footer>
-  <div class="footer-inner">
-    <img src="assets/logo.svg" alt="">
-    <div class="grow">
-      <div>Maintained by the Experience Tracking Chair of the University of Florida AIAA Student Chapter.</div>
-      <div style="margin-top:6px;opacity:.8">Entries are self-reported by members and alumni. Map data © OpenStreetMap contributors, tiles by CARTO.</div>
-    </div>
-    <div><a href="admin.html">Officer sign-in</a></div>
-  </div>
-</footer>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="firebase-config.js"></script>
 <script src="assets/data.js"></script>
 <script>
 const STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming","Puerto Rico","Outside the US"];
-const sel = document.getElementById("f-state");
-sel.innerHTML = `<option value="">Choose…</option>` + STATES.map(s=>`<option>${s}</option>`).join("");
-sel.value = "Florida";
-
+document.getElementById("states").innerHTML = STATES.map(s=>`<option value="${s}">`).join("");
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const isFT = p => p.type === "Full-time";
-const kind = p => isFT(p) ? "f" : "i";
-const typeLabel = p => p.type || "Internship";
+const yr = v => esc(AIAA.year(v));
+const $ = id => document.getElementById(id);
+const show = (id,on=true)=>{ $(id).hidden = !on; };
+const msg = (id, text, cls="") => { const el=$(id); el.className = text ? `notice ${cls}` : ""; el.textContent = text||""; el.style.marginTop = text ? "10px" : "0"; };
 
-// ---- map ----
-const map = L.map("map",{worldCopyJump:true, scrollWheelZoom:true, minZoom:2, maxZoom:14}).setView([38,-96],4);
+let me = null, alumni = [], submissions = [], admins = [];
 
-// Basemap: CARTO street tiles when a key is configured, otherwise the built-in flat vector map
-// (US states + world land, assets/basemap.json) which needs no outside service at all.
-function vectorBasemap(geojson){
-  document.getElementById("map").style.background = "#D7E1EC";
-  L.geoJSON(geojson, {style: f => f.properties.k === "s"
-    ? {fillColor:"#F6F7FA", fillOpacity:1, color:"#B9C3D3", weight:.8}
-    : {fillColor:"#E9ECF2", fillOpacity:1, color:"#C9D0DC", weight:.6}}).addTo(map);
-  map.attributionControl.addAttribution("Boundaries: U.S. Census Bureau, Natural Earth");
+// ================= AUTH =================
+let createMode = false;
+$("toggle-mode").addEventListener("click", ()=>{
+  createMode = !createMode;
+  $("login-btn").textContent = createMode ? "Create account" : "Sign in";
+  $("toggle-mode").textContent = createMode ? "Already have an account? Sign in" : "First time here? Create your account";
+  $("login-lede").textContent = createMode ? "Use the email a current officer added to the officer list. Pick a password of at least 6 characters." : "Sign in to review submissions and edit the map.";
+  $("l-pass").autocomplete = createMode ? "new-password" : "current-password";
+  msg("login-msg","");
+});
+const authErr = e => ({
+  "auth/invalid-credential":"Wrong email or password.",
+  "auth/wrong-password":"Wrong email or password.",
+  "auth/user-not-found":"No account with that email yet. Use “Create your account” if you're a new officer.",
+  "auth/email-already-in-use":"That email already has an account. Sign in instead.",
+  "auth/weak-password":"Password needs at least 6 characters.",
+  "auth/invalid-email":"That doesn't look like a valid email.",
+  "auth/too-many-requests":"Too many attempts. Wait a minute and try again.",
+  "auth/operation-not-allowed":"Email/password sign-in isn't enabled in Firebase yet (Authentication > Sign-in method).",
+  "auth/network-request-failed":"Network error. Check your connection.",
+}[e.code] || e.message || String(e));
+
+$("login-form").addEventListener("submit", async e=>{
+  e.preventDefault(); msg("login-msg","");
+  const email = $("l-email").value.trim(), pass = $("l-pass").value;
+  $("login-btn").disabled = true;
+  try{ createMode ? await AIAA.createAccount(email, pass) : await AIAA.signIn(email, pass); }
+  catch(err){ msg("login-msg", authErr(err), "error"); }
+  finally{ $("login-btn").disabled = false; }
+});
+$("forgot").addEventListener("click", async ()=>{
+  const email = $("l-email").value.trim();
+  if(!email){ msg("login-msg","Type your email above first, then click Forgot password.","info"); return; }
+  try{ await AIAA.resetPassword(email); msg("login-msg",`Reset link sent to ${email}. Check spam if it doesn't show up.`,"ok"); }
+  catch(err){ msg("login-msg", authErr(err), "error"); }
+});
+$("signout").addEventListener("click", ()=>AIAA.signOut());
+$("na-signout").addEventListener("click", ()=>AIAA.signOut());
+
+AIAA.onAuth(async user=>{
+  me = user;
+  show("login", !user); show("dash", false); show("not-admin", false); show("who", !!user);
+  if (!user) return;
+  $("who-email").textContent = user.email;
+  const ok = await AIAA.isAdmin(user.email);
+  if (!ok){ $("na-email").textContent = user.email; show("not-admin"); return; }
+  show("dash"); show("demo-banner", AIAA.DEMO);
+  await refreshAll();
+});
+
+// ================= TABS =================
+document.querySelectorAll(".tabs [role=tab]").forEach(t=>t.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs [role=tab]").forEach(x=>x.setAttribute("aria-selected", x===t));
+  document.querySelectorAll(".panel").forEach(p=>p.dataset.active = p.dataset.tab===t.dataset.tab);
+}));
+
+async function refreshAll(){
+  [alumni, submissions, admins] = await Promise.all([AIAA.loadAlumni(), AIAA.loadSubmissions(), AIAA.loadAdmins()]);
+  renderPending(); renderAlumni(); renderAdmins();
 }
-if (window.CARTO_BASEMAP_KEY){
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${encodeURIComponent(window.CARTO_BASEMAP_KEY)}`,{
-    maxZoom:19, subdomains:"abcd", attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
-  }).addTo(map);
-} else if (window.PREVIEW_BASEMAP){
-  vectorBasemap(window.PREVIEW_BASEMAP);
-} else {
-  fetch("assets/basemap.json").then(r=>r.json()).then(vectorBasemap).catch(()=>{});
-}
-const cluster = L.markerClusterGroup({maxClusterRadius:40, spiderfyOnMaxZoom:true, showCoverageOnHover:false});
-map.addLayer(cluster);
 
-let people = [];
-const markers = new Map();
-const ui = { q:"", types:new Set(["Internship","Full-time"]), group:"company" };
-
-const visible = () => {
-  const q = ui.q.trim().toLowerCase();
-  return people.filter(p => ui.types.has(isFT(p)?"Full-time":"Internship") &&
-    (!q || [p.name,p.company,p.city,p.state,p.position,p.gradYear].join(" ").toLowerCase().includes(q)));
-};
-const keyOf = p => `${p.company}|${p.city}|${p.state}`;
-
-function popupFor(group){
-  const p0 = group[0];
-  const who = group.sort((a,b)=>String(b.oppYear).localeCompare(String(a.oppYear))).map(p=>`
-    <div class="who">
-      <strong>${esc(p.name)}</strong> <span class="yr">· class of ${esc(p.gradYear)}</span><br>
-      ${esc(p.position)} · ${esc(typeLabel(p))} <span class="yr">(${esc(p.oppYear)})</span>
-      ${(p.email||p.linkedin) ? `<div class="contact">
-        ${p.email ? `<a href="mailto:${esc(p.email)}">Email</a>` : ""}
-        ${p.linkedin ? `<a href="${esc(p.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}
-      </div>` : ""}
+// ================= PENDING =================
+function renderPending(){
+  $("pending-badge").textContent = submissions.length || "";
+  const host = $("pending-list");
+  if (!submissions.length){ host.innerHTML = `<div class="card muted">No submissions waiting. New entries from the public form will show up here.</div>`; return; }
+  host.innerHTML = submissions.map(s=>`
+    <div class="card sub" data-id="${esc(s.id)}">
+      <dl>
+        <dt>Name</dt><dd><strong>${esc(s.name)}</strong></dd>
+        <dt>Position</dt><dd>${esc(s.position)} <span class="tag ${s.type==="Full-time"?"f":"i"}">${esc(s.type)}</span></dd>
+        <dt>Company</dt><dd>${esc(s.company)}</dd>
+        <dt>Location</dt><dd>${esc(s.city)}, ${esc(s.state)}</dd>
+        <dt>Years</dt><dd>Class of ${yr(s.gradYear)} · opportunity in ${yr(s.oppYear)}</dd>
+        <dt>Contact</dt><dd>${s.email?`<a href="mailto:${esc(s.email)}">${esc(s.email)}</a>`:""}${s.email&&s.linkedin?" · ":""}${s.linkedin?`<a href="${esc(s.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`:""}${!s.email&&!s.linkedin?'<span class="muted">none given</span>':""}</dd>
+        <dt>Sent</dt><dd class="muted">${s.createdAt ? new Date(s.createdAt).toLocaleString() : ""}</dd>
+      </dl>
+      <div class="btns">
+        <button class="btn" data-act="approve">Approve</button>
+        <button class="btn ghost" data-act="edit">Edit, then approve</button>
+        <button class="btn danger" data-act="reject">Reject</button>
+      </div>
+      ${s.notes ? `<div class="notes"><strong>Note to officers:</strong> ${esc(s.notes)}</div>` : ""}
     </div>`).join("");
-  return `<div class="popup"><h3>${esc(p0.company)}</h3><p class="meta">${esc(p0.city)}, ${esc(p0.state)}</p>${who}</div>`;
 }
-
-function render(){
-  const rows = visible();
-  cluster.clearLayers(); markers.clear();
-
-  const groups = new Map();
-  for (const p of rows){
-    if (typeof p.lat !== "number" || typeof p.lon !== "number") continue;
-    const k = keyOf(p); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(p);
+$("pending-list").addEventListener("click", async e=>{
+  const btn = e.target.closest("[data-act]"); if(!btn) return;
+  const card = btn.closest(".sub"), sub = submissions.find(s=>s.id===card.dataset.id);
+  if (btn.dataset.act==="approve"){
+    btn.disabled = true; btn.textContent = "Placing pin…";
+    try{ await AIAA.approveSubmission(sub); await refreshAll(); }
+    catch(err){ alert("Couldn't approve: "+err.message); btn.disabled=false; btn.textContent="Approve"; }
+  } else if (btn.dataset.act==="reject"){
+    if (!confirm(`Reject and delete the submission from ${sub.name}?`)) return;
+    await AIAA.rejectSubmission(sub.id); await refreshAll();
+  } else if (btn.dataset.act==="edit"){
+    openEdit({...sub, id:""}, {approveFrom: sub.id});
   }
-  for (const [k, g] of groups){
-    const allFT = g.every(isFT), allI = g.every(p=>!isFT(p));
-    const cls = allFT ? "f" : allI ? "i" : "m";
-    const mk = L.marker([g[0].lat, g[0].lon],{
-      icon:L.divIcon({className:"", html:`<div class="pin ${cls}"></div>`, iconSize:[15,15], iconAnchor:[8,8], popupAnchor:[0,-9]}),
-      title:`${g[0].company} — ${g[0].city}`
-    }).bindPopup(popupFor([...g]));
-    cluster.addLayer(mk); markers.set(k, mk);
-  }
-
-  const list = document.getElementById("list");
-  list.querySelectorAll(".grp,.empty").forEach(n=>n.remove());
-  if (!rows.length){ list.insertAdjacentHTML("beforeend",`<div class="empty">No one matches that yet. Try a company name, a city, or a state — or be the first to <a href="#add">add it</a>.</div>`); }
-
-  const by = new Map();
-  for (const p of rows){ const g = ui.group==="state" ? (p.state||"Unknown") : (p.company||"Unknown"); if(!by.has(g)) by.set(g,[]); by.get(g).push(p); }
-  for (const g of [...by.keys()].sort((a,b)=>a.localeCompare(b))){
-    const ppl = by.get(g).sort((a,b)=> ui.group==="state" ? (a.company+a.name).localeCompare(b.company+b.name) : (a.city+a.name).localeCompare(b.city+b.name));
-    const items = ppl.map(p=>`
-      <button class="person" data-key="${esc(keyOf(p))}">
-        <span class="dot ${kind(p)}"></span>
-        <span>
-          <div class="name">${esc(p.name)}</div>
-          <div class="role">${esc(p.position)}${ui.group==="state" ? ` · ${esc(p.company)}` : ""}</div>
-          <div class="where">${esc(p.city)}${ui.group==="company" ? `, ${esc(p.state)}` : ""} · ${esc(typeLabel(p))} ${esc(p.oppYear)} · class of ${esc(p.gradYear)}</div>
-        </span>
-      </button>`).join("");
-    list.insertAdjacentHTML("beforeend",`<section class="grp"><div class="grp-head"><span>${esc(g)}</span><span>${ppl.length}</span></div>${items}</section>`);
-  }
-
-  document.getElementById("count").textContent = rows.length === people.length ? `${people.length} entries` : `${rows.length} of ${people.length} entries`;
-}
-
-function writeLede(){
-  const companies = new Set(people.map(p=>p.company)).size;
-  const states = new Set(people.map(p=>p.state)).size;
-  const n = people.length;
-  document.getElementById("lede").innerHTML = n
-    ? `<strong>${n} ${n===1?"entry":"entries"}</strong> from UF AIAA members and alumni across <strong>${companies} ${companies===1?"company":"companies"}</strong> in <strong>${states} ${states===1?"state":"states"}</strong>. Click a pin to see who worked there and how to reach them, or search for a company or city you're aiming at.`
-    : `Nothing on the map yet. Once entries are approved they show up here.`;
-}
-
-document.getElementById("list").addEventListener("click", e=>{
-  const btn = e.target.closest(".person"); if(!btn) return;
-  document.querySelectorAll(".person[aria-current]").forEach(b=>b.removeAttribute("aria-current"));
-  btn.setAttribute("aria-current","true");
-  const mk = markers.get(btn.dataset.key); if(!mk) return;
-  if (window.innerWidth <= 900) document.getElementById("map").scrollIntoView({behavior:"smooth", block:"start"});
-  cluster.zoomToShowLayer(mk, ()=>{ map.setView(mk.getLatLng(), Math.max(map.getZoom(), 9)); mk.openPopup(); });
 });
-document.getElementById("q").addEventListener("input", e=>{ ui.q = e.target.value; render(); });
-document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
-  const on = c.getAttribute("aria-pressed")!=="true"; c.setAttribute("aria-pressed", on);
-  on ? ui.types.add(c.dataset.type) : ui.types.delete(c.dataset.type); render();
-}));
-document.querySelectorAll(".group-toggle button").forEach(b=>b.addEventListener("click",()=>{
-  document.querySelectorAll(".group-toggle button").forEach(x=>x.setAttribute("aria-pressed","false"));
-  b.setAttribute("aria-pressed","true"); ui.group = b.dataset.group; render();
-}));
 
-// ---- submit form ----
-const form = document.getElementById("submit-form");
-form.addEventListener("submit", async e=>{
+// ================= ALUMNI =================
+function renderAlumni(){
+  const q = $("a-search").value.trim().toLowerCase();
+  const rows = alumni.filter(a=>!q || [a.name,a.company,a.city,a.state,a.position].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=>(a.company+a.name).localeCompare(b.company+b.name));
+  $("a-count").textContent = `${rows.length} of ${alumni.length}`;
+  const missing = alumni.filter(a=>typeof a.lat!=="number").length;
+  show("locate-missing", missing>0); if (missing) $("locate-missing").textContent = `Locate ${missing} unpinned ${missing===1?"entry":"entries"}`;
+  $("a-table").querySelector("tbody").innerHTML = rows.map(a=>`
+    <tr data-id="${esc(a.id)}">
+      <td><strong>${esc(a.name)}</strong></td>
+      <td>${esc(a.position)}</td>
+      <td><span class="tag ${a.type==="Full-time"?"f":"i"}">${esc(a.type)}</span></td>
+      <td>${esc(a.company)}</td>
+      <td>${typeof a.lat!=="number" ? '<span class="warn-dot" title="Not on the map yet — no coordinates"></span>' : ""}${esc(a.city)}, ${esc(a.state)}</td>
+      <td>${yr(a.gradYear)}</td>
+      <td>${yr(a.oppYear)}</td>
+      <td class="small">${a.email?`<a href="mailto:${esc(a.email)}">email</a>`:""}${a.email&&a.linkedin?" · ":""}${a.linkedin?`<a href="${esc(a.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`:""}</td>
+      <td class="actions"><button class="btn ghost small" data-act="edit">Edit</button> <button class="btn danger small" data-act="delete">Delete</button></td>
+    </tr>`).join("") || `<tr><td colspan="9" class="muted">Nothing here yet. Add an entry or import the old map.</td></tr>`;
+}
+$("a-search").addEventListener("input", renderAlumni);
+$("add-alum").addEventListener("click", ()=>openEdit({type:"Internship", state:"Florida"}));
+$("a-table").addEventListener("click", async e=>{
+  const btn = e.target.closest("[data-act]"); if(!btn) return;
+  const a = alumni.find(x=>x.id===btn.closest("tr").dataset.id);
+  if (btn.dataset.act==="edit") openEdit(a);
+  if (btn.dataset.act==="delete"){
+    if(!confirm(`Delete ${a.name} (${a.company})? This can't be undone.`)) return;
+    await AIAA.deleteAlum(a.id); await refreshAll();
+  }
+});
+$("locate-missing").addEventListener("click", async ()=>{
+  const btn = $("locate-missing"); btn.disabled = true;
+  const missing = alumni.filter(a=>typeof a.lat!=="number");
+  let done = 0;
+  for (const a of missing){
+    btn.textContent = `Locating ${++done} of ${missing.length}…`;
+    const g = await AIAA.geocode(a.city, a.state);
+    if (g) await AIAA.saveAlum({...a, ...g}, {skipGeocode:true});
+  }
+  btn.disabled = false; await refreshAll();
+});
+
+// ================= EDIT MODAL =================
+const dlg = $("edit"), ef = $("edit-form");
+let editCtx = {};
+function openEdit(entry, ctx={}){
+  editCtx = ctx;
+  $("edit-title").textContent = ctx.approveFrom ? "Edit and approve" : entry.id ? "Edit entry" : "Add entry";
+  $("edit-save").textContent = ctx.approveFrom ? "Save and approve" : "Save";
+  for (const el of ef.elements){ if (el.name) el.value = (el.name==="gradYear"||el.name==="oppYear") ? AIAA.year(entry[el.name]) : (entry[el.name] ?? ""); }
+  $("edit-msg").textContent = "";
+  dlg.showModal();
+}
+$("edit-cancel").addEventListener("click", ()=>dlg.close());
+ef.addEventListener("submit", async e=>{
   e.preventDefault();
-  const msg = document.getElementById("form-msg"), btn = document.getElementById("submit-btn");
-  msg.className = ""; msg.textContent = "";
-  if (!form.reportValidity()) return;
-  const data = Object.fromEntries(new FormData(form).entries());
-  if (data.website){ form.reset(); sel.value="Florida"; msg.textContent = "Thanks! An officer will review it shortly."; return; } // honeypot
-  delete data.website;
-  btn.disabled = true; btn.textContent = "Sending…";
+  if (!ef.reportValidity()) return;
+  const data = Object.fromEntries(new FormData(ef).entries());
+  $("edit-save").disabled = true; $("edit-msg").textContent = (data.lat && data.lon) ? "Saving…" : "Finding the city on the map…";
   try{
-    await AIAA.submitEntry(data);
-    form.reset(); sel.value = "Florida";
-    msg.className = "notice ok"; msg.textContent = "Thanks! An officer will review it and it'll appear on the map once approved.";
-  }catch(err){
-    console.error(err);
-    msg.className = "notice error"; msg.textContent = "That didn't go through. Check your connection and try again, or email an officer directly.";
-  }finally{ btn.disabled = false; btn.textContent = "Send for review"; }
+    await AIAA.saveAlum(data);
+    if (editCtx.approveFrom) await AIAA.rejectSubmission(editCtx.approveFrom); // remove from queue now that it's live
+    dlg.close(); await refreshAll();
+  }catch(err){ $("edit-msg").textContent = "Couldn't save: " + err.message; }
+  finally{ $("edit-save").disabled = false; }
 });
 
-// ---- load ----
-(async ()=>{
+// ================= IMPORT =================
+const HEADERS = {
+  position:["position","role","title"], name:["name"], type:["internship or full","type"], company:["company","employer","organization"],
+  city:["city"], state:["state"], gradYear:["graduation year","grad year","class of"], oppYear:["year of opportunity","opportunity year"],
+  lat:["lat"], lon:["lon","lng","long"], email:["email","e-mail"], linkedin:["linkedin"], notes:["notes","comments"], wkt:["wkt","geometry"],
+};
+const norm = h => String(h).toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+function mapHeaders(headers){
+  const m = {};
+  for (const [key, needles] of Object.entries(HEADERS)){
+    m[key] = headers.find(h => needles.some(n => norm(h).includes(n)) && !(key==="oppYear" && norm(h).includes("grad")) && !(key==="lat" && norm(h).includes("late")));
+  }
+  if (!m.oppYear) m.oppYear = headers.find(h => norm(h)==="year");
+  return m;
+}
+let staged = [];
+function rowsFromCSV(text){
+  const parsed = Papa.parse(text.trim(), {header:true, skipEmptyLines:true});
+  const h = mapHeaders(parsed.meta.fields||[]);
+  return parsed.data.map(r=>{
+    const o = {};
+    for (const k of Object.keys(HEADERS)) if (h[k] && k!=="wkt") o[k] = (r[h[k]]??"").toString().trim();
+    if (h.wkt && !o.lat){ const m = /POINT\s*\(\s*(-?[\d.]+)\s+(-?[\d.]+)\s*\)/i.exec(r[h.wkt]||""); if(m){ o.lon=m[1]; o.lat=m[2]; } }
+    return o;
+  }).filter(o=>o.name);
+}
+function rowsFromKML(text){
+  const doc = new DOMParser().parseFromString(text, "application/xml");
+  const out = [];
+  for (const pm of doc.getElementsByTagName("Placemark")){
+    const data = {};
+    for (const d of pm.getElementsByTagName("Data")){ data[d.getAttribute("name")] = d.getElementsByTagName("value")[0]?.textContent?.trim() ?? ""; }
+    for (const d of pm.getElementsByTagName("SimpleData")){ data[d.getAttribute("name")] = d.textContent.trim(); }
+    const h = mapHeaders(Object.keys(data));
+    const o = {};
+    for (const k of Object.keys(HEADERS)) if (h[k] && k!=="wkt") o[k] = data[h[k]] || "";
+    if (!o.name) o.name = pm.getElementsByTagName("name")[0]?.textContent?.trim() || "";
+    const coords = pm.getElementsByTagName("coordinates")[0]?.textContent?.trim();
+    if (coords){ const [lon, lat] = coords.split(/[\s,]+/); o.lon = lon; o.lat = lat; }
+    if (o.name) out.push(o);
+  }
+  return out;
+}
+function stage(text, filename=""){
+  msg("import-msg","");
   try{
-    people = await AIAA.loadAlumni();
-  }catch(err){
-    console.error(err);
-    document.getElementById("list").insertAdjacentHTML("afterbegin",`<div class="notice error side-notice">Couldn't load entries. If you're an officer, check that Firestore is set up and the rules are published.</div>`);
-  }
-  if (AIAA.DEMO){
-    document.getElementById("list").insertAdjacentHTML("afterbegin",`<div class="notice info side-notice">Preview with sample data. Follow the README to connect Firebase and this notice disappears.</div>`);
-  }
-  writeLede(); render();
-})();
+    staged = /<kml|<Placemark/i.test(text) || /\.kml$/i.test(filename) ? rowsFromKML(text) : rowsFromCSV(text);
+  }catch(err){ staged = []; msg("import-msg","Couldn't read that file: "+err.message,"error"); return; }
+  if (!staged.length){ msg("import-msg","No rows found. Check that the first row has headers and there's a Name column.","error"); show("preview-wrap",false); $("import-btn").disabled = true; return; }
+  const cols = ["name","position","type","company","city","state","gradYear","oppYear","email","linkedin","lat","lon"];
+  $("preview").querySelector("thead").innerHTML = `<tr>${cols.map(c=>`<th>${c}</th>`).join("")}</tr>`;
+  $("preview").querySelector("tbody").innerHTML = staged.slice(0,8).map(r=>`<tr>${cols.map(c=>`<td>${esc(r[c]||"")}</td>`).join("")}</tr>`).join("");
+  show("preview-wrap");
+  const needGeo = staged.filter(r=>!r.lat).length;
+  const missingCols = ["name","company","city","state"].filter(c=>!staged.some(r=>r[c]));
+  msg("import-msg", `${staged.length} rows ready${needGeo?`, ${needGeo} need geocoding (about ${Math.ceil(needGeo*1.1/60)} min)`:""}.${missingCols.length?` Warning: no ${missingCols.join(", ")} column detected.`:""} Showing the first ${Math.min(8,staged.length)}.`, missingCols.length?"":"ok");
+  $("import-btn").disabled = false;
+}
+$("parse").addEventListener("click", ()=>stage($("paste").value));
+$("file").addEventListener("change", e=>{ const f=e.target.files[0]; if(f) f.text().then(t=>stage(t,f.name)); });
+const drop = $("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop", e=>{ const f=e.dataTransfer.files[0]; if(f) f.text().then(t=>stage(t,f.name)); });
+
+$("import-btn").addEventListener("click", async ()=>{
+  if (!staged.length) return;
+  const replace = $("replace-all").checked;
+  if (replace && !confirm(`This deletes all ${alumni.length} existing entries first, then imports ${staged.length}. Continue?`)) return;
+  $("import-btn").disabled = true; show("progress"); const bar = $("progress").firstElementChild;
+  try{
+    if (replace) await AIAA.deleteAllAlumni();
+    let n = 0, failedGeo = [];
+    for (const r of staged){
+      const row = {...r};
+      if (!(parseFloat(row.lat) && parseFloat(row.lon))){
+        delete row.lat; delete row.lon;
+        const g = await AIAA.geocode(row.city, row.state);
+        if (g) Object.assign(row, g); else failedGeo.push(`${row.city}, ${row.state}`);
+      }
+      await AIAA.saveAlum(row, {skipGeocode:true});
+      bar.style.width = `${Math.round(++n/staged.length*100)}%`;
+      msg("import-msg", `Imported ${n} of ${staged.length}…`, "info");
+    }
+    const uniqFailed = [...new Set(failedGeo)];
+    msg("import-msg", `Done — ${n} entries imported.${uniqFailed.length?` Couldn't place: ${uniqFailed.join("; ")}. Fix the spelling or add coordinates in the Alumni tab.`:""}`, "ok");
+    staged = []; show("preview-wrap",false); $("paste").value = ""; $("file").value = "";
+    await refreshAll();
+  }catch(err){ msg("import-msg","Import stopped: "+err.message,"error"); }
+  finally{ show("progress",false); bar.style.width="0"; }
+});
+
+$("export-btn").addEventListener("click", ()=>{
+  const cols = ["name","position","type","company","city","state","gradYear","oppYear","email","linkedin","lat","lon"];
+  const csv = Papa.unparse(alumni.map(a=>Object.fromEntries(cols.map(c=>[c, (c==="gradYear"||c==="oppYear") ? AIAA.year(a[c]) : (a[c]??"")]))), {columns:cols});
+  const blob = new Blob([csv],{type:"text/csv"}); const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `uf-aiaa-experience-map-${new Date().toISOString().slice(0,10)}.csv`; a.click();
+});
+
+// ================= OFFICERS =================
+function renderAdmins(){
+  $("admins-table").querySelector("tbody").innerHTML = admins.sort((a,b)=>a.id.localeCompare(b.id)).map(a=>`
+    <tr><td>${esc(a.id)}${me && a.id===me.email.toLowerCase()?' <span class="muted small">(you)</span>':""}</td>
+    <td class="actions">${me && a.id===me.email.toLowerCase() ? "" : `<button class="btn danger small" data-email="${esc(a.id)}">Remove</button>`}</td></tr>`).join("");
+}
+$("add-admin-form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  try{ await AIAA.addAdmin($("admin-email").value, me?.email); $("admin-email").value=""; msg("admin-msg","Added. They can now create an account with that email on the sign-in page.","ok"); }
+  catch(err){ msg("admin-msg","Couldn't add: "+err.message,"error"); }
+  admins = await AIAA.loadAdmins(); renderAdmins();
+});
+$("admins-table").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-email]"); if(!b) return;
+  if(!confirm(`Remove ${b.dataset.email} from the officer list?`)) return;
+  await AIAA.removeAdmin(b.dataset.email); admins = await AIAA.loadAdmins(); renderAdmins();
+});
 </script>
 </body>
 </html>

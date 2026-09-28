@@ -160,6 +160,7 @@ sel.innerHTML = `<option value="">Choose…</option>` + STATES.map(s=>`<option>$
 sel.value = "Florida";
 
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const yr = v => esc(AIAA.year(v));
 const isFT = p => p.type === "Full-time";
 const kind = p => isFT(p) ? "f" : "i";
 const typeLabel = p => p.type || "Internship";
@@ -195,16 +196,16 @@ const ui = { q:"", types:new Set(["Internship","Full-time"]), group:"company" };
 const visible = () => {
   const q = ui.q.trim().toLowerCase();
   return people.filter(p => ui.types.has(isFT(p)?"Full-time":"Internship") &&
-    (!q || [p.name,p.company,p.city,p.state,p.position,p.gradYear].join(" ").toLowerCase().includes(q)));
+    (!q || [p.name,p.company,p.city,p.state,p.position,AIAA.year(p.gradYear)].join(" ").toLowerCase().includes(q)));
 };
 const keyOf = p => `${p.company}|${p.city}|${p.state}`;
 
 function popupFor(group){
   const p0 = group[0];
-  const who = group.sort((a,b)=>String(b.oppYear).localeCompare(String(a.oppYear))).map(p=>`
+  const who = group.sort((a,b)=>AIAA.year(b.oppYear).localeCompare(AIAA.year(a.oppYear))).map(p=>`
     <div class="who">
-      <strong>${esc(p.name)}</strong> <span class="yr">· class of ${esc(p.gradYear)}</span><br>
-      ${esc(p.position)} · ${esc(typeLabel(p))} <span class="yr">(${esc(p.oppYear)})</span>
+      <strong>${esc(p.name)}</strong> <span class="yr">· Class of ${yr(p.gradYear)}</span><br>
+      ${esc(p.position)} · ${esc(typeLabel(p))} <span class="yr">(${yr(p.oppYear)})</span>
       ${(p.email||p.linkedin) ? `<div class="contact">
         ${p.email ? `<a href="mailto:${esc(p.email)}">Email</a>` : ""}
         ${p.linkedin ? `<a href="${esc(p.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}
@@ -246,7 +247,7 @@ function render(){
         <span>
           <div class="name">${esc(p.name)}</div>
           <div class="role">${esc(p.position)}${ui.group==="state" ? ` · ${esc(p.company)}` : ""}</div>
-          <div class="where">${esc(p.city)}${ui.group==="company" ? `, ${esc(p.state)}` : ""} · ${esc(typeLabel(p))} ${esc(p.oppYear)} · class of ${esc(p.gradYear)}</div>
+          <div class="where">${esc(p.city)}${ui.group==="company" ? `, ${esc(p.state)}` : ""} · ${esc(typeLabel(p))} ${yr(p.oppYear)} · Class of ${yr(p.gradYear)}</div>
         </span>
       </button>`).join("");
     list.insertAdjacentHTML("beforeend",`<section class="grp"><div class="grp-head"><span>${esc(g)}</span><span>${ppl.length}</span></div>${items}</section>`);
