@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UF AIAA Experience Map</title>
+<meta name="description" content="Where University of Florida AIAA members have interned and worked across the aerospace industry — and how to reach them.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .intro{background:var(--mist);border-bottom:1px solid var(--line)}
+  .intro-inner{max-width:1400px;margin:0 auto;padding:28px 24px 22px}
+  .intro h1{font-size:34px;color:var(--navy);max-width:22ch}
+  .intro p{max-width:64ch;color:var(--muted);font-size:16px;margin:10px 0 18px}
+  .intro p strong{color:var(--ink);font-weight:600}
+  .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .search{position:relative;flex:1 1 260px;max-width:480px}
+  .search input{padding-left:36px}
+  .search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);pointer-events:none}
+  .group-toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .group-toggle button{border:0;background:none;padding:7px 12px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+  .group-toggle button[aria-pressed="true"]{background:var(--navy);color:#fff}
+  .count{font-size:13px;color:var(--muted);margin-left:auto}
+
+  .explorer{max-width:1400px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:380px 1fr;height:clamp(520px,72vh,860px);border-bottom:1px solid var(--line)}
+  aside{overflow-y:auto;border-right:1px solid var(--line);background:#fff}
+  #map{height:100%;width:100%;background:#E9EDF4}
+  .grp{border-bottom:1px solid var(--line)}
+  .grp-head{position:sticky;top:0;z-index:1;background:#fff;padding:10px 16px 6px;font-size:12.5px;font-weight:600;color:var(--muted);display:flex;justify-content:space-between}
+  .person{display:grid;grid-template-columns:12px 1fr;gap:12px;align-items:start;width:100%;text-align:left;padding:10px 16px;border:0;background:none;cursor:pointer;color:inherit}
+  .person:hover{background:var(--mist)}
+  .person:focus-visible{outline-offset:-3px}
+  .person[aria-current="true"]{background:#EEF2FF}
+  .person .dot{width:10px;height:10px;border-radius:50%;margin-top:6px}
+  .dot.i{background:var(--uf-orange)} .dot.f{background:var(--uf-blue)}
+  .person .name{font-weight:600;font-size:14.5px}
+  .person .role{font-size:13px;color:var(--muted);margin-top:1px;line-height:1.35}
+  .person .where{font-size:12px;color:var(--muted);margin-top:3px}
+  .empty{padding:20px 16px;font-size:14px;color:var(--muted);line-height:1.5}
+  .side-notice{margin:12px 16px 0}
+
+  .add{max-width:1400px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px}
+  .add h2{font-size:28px;color:var(--navy)}
+  .add .lead{color:var(--muted);font-size:15.5px;margin-top:10px;max-width:40ch}
+  .add .lead + .lead{margin-top:8px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:0 2px 10px rgba(14,27,61,.05)}
+  .card .actions{display:flex;gap:12px;align-items:center;margin-top:18px;flex-wrap:wrap}
+  .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+  @media (max-width:900px){
+    .explorer{grid-template-columns:1fr;grid-template-rows:auto auto;height:auto;padding:0}
+    #map{order:1;height:440px}
+    aside{order:2;border-right:0;border-top:1px solid var(--line);max-height:62vh}
+    .add{grid-template-columns:1fr;gap:20px;padding-top:36px}
+    .intro-inner{padding:22px 16px 18px}
+    .intro h1{font-size:28px}
+    .add{padding-left:16px;padding-right:16px}
+    .footer-inner{padding:22px 16px}
+  }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">
+      <img src="assets/logo.svg" alt="UF AIAA">
+      <span class="brand-text">
+        <span class="chapter">University of Florida · AIAA Student Chapter</span>
+        <span class="title">Experience Map</span>
+      </span>
+    </a>
+    <nav class="topnav" aria-label="Site">
+      <a href="#explore">Map</a>
+      <a href="#add" class="primary"><span class="long">Add your experience</span><span class="short">Add yours</span></a>
+    </nav>
+  </div>
+</header>
+
+<section class="intro" id="top">
+  <div class="intro-inner">
+    <h1>Where Gators have gone to work.</h1>
+    <p id="lede">Loading the map…</p>
+    <div class="controls">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" class="input" type="search" placeholder="Search a company, city, state, name, or role" aria-label="Search alumni">
+      </div>
+      <button class="chip" data-type="Internship" aria-pressed="true"><span class="dot"></span>Internships &amp; co-ops</button>
+      <button class="chip" data-type="Full-time" aria-pressed="true"><span class="dot"></span>Full-time</button>
+      <div class="group-toggle" role="group" aria-label="Group list by">
+        <button data-group="company" aria-pressed="true">By company</button>
+        <button data-group="state" aria-pressed="false">By state</button>
+      </div>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+</section>
+
+<section class="explorer" id="explore">
+  <aside id="list" aria-label="Alumni directory"></aside>
+  <div id="map" role="application" aria-label="Map of where alumni have worked"></div>
+</section>
+
+<section class="add" id="add">
+  <div>
+    <h2>Add your experience</h2>
+    <p class="lead">Interned somewhere, took a full-time offer, or moved companies? Put it on the map so the next Gator applying there has someone to ask.</p>
+    <p class="lead">An officer reviews each entry before it goes live, usually within a few days. Contact info is optional; a LinkedIn link is enough for most people.</p>
+  </div>
+  <form class="card" id="submit-form" novalidate>
+    <div class="form-grid">
+      <div class="field"><label for="f-name">Name (first and last)</label><input class="input" id="f-name" name="name" required autocomplete="name"></div>
+      <div class="field"><label for="f-position">Position</label><input class="input" id="f-position" name="position" placeholder="e.g. Controls Engineering Intern" required></div>
+      <div class="field"><label for="f-type">Internship or full-time?</label>
+        <select class="select" id="f-type" name="type" required>
+          <option value="Internship">Internship</option>
+          <option value="Co-op">Co-op</option>
+          <option value="Full-time">Full-time</option>
+        </select></div>
+      <div class="field"><label for="f-company">Company</label><input class="input" id="f-company" name="company" required></div>
+      <div class="field"><label for="f-city">City</label><input class="input" id="f-city" name="city" required placeholder="e.g. Eglin Air Force Base"></div>
+      <div class="field"><label for="f-state">State</label><select class="select" id="f-state" name="state" required></select></div>
+      <div class="field"><label for="f-grad">Graduation year</label><input class="input" id="f-grad" name="gradYear" inputmode="numeric" pattern="[0-9]{4}" placeholder="2027" required></div>
+      <div class="field"><label for="f-opp">Year of the opportunity</label><input class="input" id="f-opp" name="oppYear" inputmode="numeric" pattern="[0-9]{4}" placeholder="2026" required></div>
+      <div class="field"><label for="f-email">Email <span class="hint">optional, shown publicly</span></label><input class="input" id="f-email" name="email" type="email" autocomplete="email"></div>
+      <div class="field"><label for="f-linkedin">LinkedIn URL <span class="hint">optional</span></label><input class="input" id="f-linkedin" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/…"></div>
+      <div class="field span-2"><label for="f-notes">Anything the officers should know <span class="hint">optional, only officers see this</span></label><textarea class="textarea" id="f-notes" name="notes" placeholder="e.g. I'm happy to do referrals for the summer program."></textarea></div>
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </div>
+    <div class="actions">
+      <button class="btn orange" type="submit" id="submit-btn">Send for review</button>
+      <span id="form-msg" aria-live="polite"></span>
+    </div>
+  </form>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <img src="assets/logo.svg" alt="">
+    <div class="grow">
+      <div>Maintained by the Experience Tracking Chair of the University of Florida AIAA Student Chapter.</div>
+      <div style="margin-top:6px;opacity:.8">Entries are self-reported by members and alumni. Map data © OpenStreetMap contributors, tiles by CARTO.</div>
+    </div>
+    <div><a href="admin.html">Officer sign-in</a></div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="firebase-config.js"></script>
+<script src="assets/data.js"></script>
+<script>
+const STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming","Puerto Rico","Outside the US"];
+const sel = document.getElementById("f-state");
+sel.innerHTML = `<option value="">Choose…</option>` + STATES.map(s=>`<option>${s}</option>`).join("");
+sel.value = "Florida";
+
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const isFT = p => p.type === "Full-time";
+const kind = p => isFT(p) ? "f" : "i";
+const typeLabel = p => p.type || "Internship";
+
+// ---- map ----
+const map = L.map("map",{worldCopyJump:true, scrollWheelZoom:true, minZoom:2, maxZoom:14}).setView([38,-96],4);
+if (window.PREVIEW_BASEMAP){
+  // Hosted previews that can't load tiles get a flat vector basemap instead (US states + world land).
+  document.getElementById("map").style.background = "#D7E1EC";
+  L.geoJSON(window.PREVIEW_BASEMAP, {style: f => f.properties.k === "s"
+    ? {fillColor:"#F6F7FA", fillOpacity:1, color:"#B9C3D3", weight:.8}
+    : {fillColor:"#E9ECF2", fillOpacity:1, color:"#C9D0DC", weight:.6}}).addTo(map);
+  map.attributionControl.addAttribution("Boundaries: U.S. Census Bureau, Natural Earth");
+} else {
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{
+    maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+  }).addTo(map);
+}
+const cluster = L.markerClusterGroup({maxClusterRadius:40, spiderfyOnMaxZoom:true, showCoverageOnHover:false});
+map.addLayer(cluster);
+
+let people = [];
+const markers = new Map();
+const ui = { q:"", types:new Set(["Internship","Full-time"]), group:"company" };
+
+const visible = () => {
+  const q = ui.q.trim().toLowerCase();
+  return people.filter(p => ui.types.has(isFT(p)?"Full-time":"Internship") &&
+    (!q || [p.name,p.company,p.city,p.state,p.position,p.gradYear].join(" ").toLowerCase().includes(q)));
+};
+const keyOf = p => `${p.company}|${p.city}|${p.state}`;
+
+function popupFor(group){
+  const p0 = group[0];
+  const who = group.sort((a,b)=>String(b.oppYear).localeCompare(String(a.oppYear))).map(p=>`
+    <div class="who">
+      <strong>${esc(p.name)}</strong> <span class="yr">· class of ${esc(p.gradYear)}</span><br>
+      ${esc(p.position)} · ${esc(typeLabel(p))} <span class="yr">(${esc(p.oppYear)})</span>
+      ${(p.email||p.linkedin) ? `<div class="contact">
+        ${p.email ? `<a href="mailto:${esc(p.email)}">Email</a>` : ""}
+        ${p.linkedin ? `<a href="${esc(p.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ""}
+      </div>` : ""}
+    </div>`).join("");
+  return `<div class="popup"><h3>${esc(p0.company)}</h3><p class="meta">${esc(p0.city)}, ${esc(p0.state)}</p>${who}</div>`;
+}
+
+function render(){
+  const rows = visible();
+  cluster.clearLayers(); markers.clear();
+
+  const groups = new Map();
+  for (const p of rows){
+    if (typeof p.lat !== "number" || typeof p.lon !== "number") continue;
+    const k = keyOf(p); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(p);
+  }
+  for (const [k, g] of groups){
+    const allFT = g.every(isFT), allI = g.every(p=>!isFT(p));
+    const cls = allFT ? "f" : allI ? "i" : "m";
+    const mk = L.marker([g[0].lat, g[0].lon],{
+      icon:L.divIcon({className:"", html:`<div class="pin ${cls}"></div>`, iconSize:[15,15], iconAnchor:[8,8], popupAnchor:[0,-9]}),
+      title:`${g[0].company} — ${g[0].city}`
+    }).bindPopup(popupFor([...g]));
+    cluster.addLayer(mk); markers.set(k, mk);
+  }
+
+  const list = document.getElementById("list");
+  list.querySelectorAll(".grp,.empty").forEach(n=>n.remove());
+  if (!rows.length){ list.insertAdjacentHTML("beforeend",`<div class="empty">No one matches that yet. Try a company name, a city, or a state — or be the first to <a href="#add">add it</a>.</div>`); }
+
+  const by = new Map();
+  for (const p of rows){ const g = ui.group==="state" ? (p.state||"Unknown") : (p.company||"Unknown"); if(!by.has(g)) by.set(g,[]); by.get(g).push(p); }
+  for (const g of [...by.keys()].sort((a,b)=>a.localeCompare(b))){
+    const ppl = by.get(g).sort((a,b)=> ui.group==="state" ? (a.company+a.name).localeCompare(b.company+b.name) : (a.city+a.name).localeCompare(b.city+b.name));
+    const items = ppl.map(p=>`
+      <button class="person" data-key="${esc(keyOf(p))}">
+        <span class="dot ${kind(p)}"></span>
+        <span>
+          <div class="name">${esc(p.name)}</div>
+          <div class="role">${esc(p.position)}${ui.group==="state" ? ` · ${esc(p.company)}` : ""}</div>
+          <div class="where">${esc(p.city)}${ui.group==="company" ? `, ${esc(p.state)}` : ""} · ${esc(typeLabel(p))} ${esc(p.oppYear)} · class of ${esc(p.gradYear)}</div>
+        </span>
+      </button>`).join("");
+    list.insertAdjacentHTML("beforeend",`<section class="grp"><div class="grp-head"><span>${esc(g)}</span><span>${ppl.length}</span></div>${items}</section>`);
+  }
+
+  document.getElementById("count").textContent = rows.length === people.length ? `${people.length} entries` : `${rows.length} of ${people.length} entries`;
+}
+
+function writeLede(){
+  const companies = new Set(people.map(p=>p.company)).size;
+  const states = new Set(people.map(p=>p.state)).size;
+  const n = people.length;
+  document.getElementById("lede").innerHTML = n
+    ? `<strong>${n} ${n===1?"entry":"entries"}</strong> from UF AIAA members and alumni across <strong>${companies} ${companies===1?"company":"companies"}</strong> in <strong>${states} ${states===1?"state":"states"}</strong>. Click a pin to see who worked there and how to reach them, or search for a company or city you're aiming at.`
+    : `Nothing on the map yet. Once entries are approved they show up here.`;
+}
+
+document.getElementById("list").addEventListener("click", e=>{
+  const btn = e.target.closest(".person"); if(!btn) return;
+  document.querySelectorAll(".person[aria-current]").forEach(b=>b.removeAttribute("aria-current"));
+  btn.setAttribute("aria-current","true");
+  const mk = markers.get(btn.dataset.key); if(!mk) return;
+  if (window.innerWidth <= 900) document.getElementById("map").scrollIntoView({behavior:"smooth", block:"start"});
+  cluster.zoomToShowLayer(mk, ()=>{ map.setView(mk.getLatLng(), Math.max(map.getZoom(), 9)); mk.openPopup(); });
+});
+document.getElementById("q").addEventListener("input", e=>{ ui.q = e.target.value; render(); });
+document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+  const on = c.getAttribute("aria-pressed")!=="true"; c.setAttribute("aria-pressed", on);
+  on ? ui.types.add(c.dataset.type) : ui.types.delete(c.dataset.type); render();
+}));
+document.querySelectorAll(".group-toggle button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".group-toggle button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true"); ui.group = b.dataset.group; render();
+}));
+
+// ---- submit form ----
+const form = document.getElementById("submit-form");
+form.addEventListener("submit", async e=>{
+  e.preventDefault();
+  const msg = document.getElementById("form-msg"), btn = document.getElementById("submit-btn");
+  msg.className = ""; msg.textContent = "";
+  if (!form.reportValidity()) return;
+  const data = Object.fromEntries(new FormData(form).entries());
+  if (data.website){ form.reset(); sel.value="Florida"; msg.textContent = "Thanks! An officer will review it shortly."; return; } // honeypot
+  delete data.website;
+  btn.disabled = true; btn.textContent = "Sending…";
+  try{
+    await AIAA.submitEntry(data);
+    form.reset(); sel.value = "Florida";
+    msg.className = "notice ok"; msg.textContent = "Thanks! An officer will review it and it'll appear on the map once approved.";
+  }catch(err){
+    console.error(err);
+    msg.className = "notice error"; msg.textContent = "That didn't go through. Check your connection and try again, or email an officer directly.";
+  }finally{ btn.disabled = false; btn.textContent = "Send for review"; }
+});
+
+// ---- load ----
+(async ()=>{
+  try{
+    people = await AIAA.loadAlumni();
+  }catch(err){
+    console.error(err);
+    document.getElementById("list").insertAdjacentHTML("afterbegin",`<div class="notice error side-notice">Couldn't load entries. If you're an officer, check that Firestore is set up and the rules are published.</div>`);
+  }
+  if (AIAA.DEMO){
+    document.getElementById("list").insertAdjacentHTML("afterbegin",`<div class="notice info side-notice">Preview with sample data. Follow the README to connect Firebase and this notice disappears.</div>`);
+  }
+  writeLede(); render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+rules_version = '2';
+
+// UF AIAA Experience Map — Firestore security rules
+// Paste into: Firebase console > Firestore Database > Rules > Publish
+//
+// Collections:
+//   alumni/{id}        approved entries shown on the public map   (anyone reads, officers write)
+//   submissions/{id}   entries from the public form, awaiting review (anyone creates, officers read/delete)
+//   admins/{email}     officer allow-list, document ID = lowercase email (officers read/write)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+    function isOfficer() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+    function str(field, max) {
+      return field is string && field.size() <= max;
+    }
+    function optStr(data, key, max) {
+      return !(key in data) || str(data[key], max);
+    }
+
+    // ---------- public map data ----------
+    match /alumni/{id} {
+      allow read: if true;
+      allow create, update, delete: if isOfficer();
+    }
+
+    // ---------- public form → review queue ----------
+    match /submissions/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          'name','position','type','company','city','state',
+          'gradYear','oppYear','email','linkedin','notes','createdAt'
+        ])
+        && str(request.resource.data.name, 100)     && request.resource.data.name.size() >= 2
+        && str(request.resource.data.company, 120)  && request.resource.data.company.size() >= 1
+        && str(request.resource.data.city, 80)      && request.resource.data.city.size() >= 1
+        && str(request.resource.data.state, 40)     && request.resource.data.state.size() >= 2
+        && str(request.resource.data.position, 120)
+        && request.resource.data.type in ['Internship','Co-op','Full-time']
+        && optStr(request.resource.data, 'gradYear', 4)
+        && optStr(request.resource.data, 'oppYear', 4)
+        && optStr(request.resource.data, 'email', 120)
+        && optStr(request.resource.data, 'linkedin', 200)
+        && optStr(request.resource.data, 'notes', 1000)
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isOfficer();
+    }
+
+    // ---------- officer allow-list ----------
+    match /admins/{email} {
+      // Officers can see and manage the list. A signed-in non-officer may read
+      // only their own entry (so the admin page can tell them they're not listed).
+      allow get: if isOfficer() || (signedIn() && email == request.auth.token.email.lower());
+      allow list: if isOfficer();
+      allow create, update, delete: if isOfficer();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
